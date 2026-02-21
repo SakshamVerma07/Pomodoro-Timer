@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomodoro Clock</title>
+    <!-- <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script> -->
+  </head>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+
+    body {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .container {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background-color: hsl(200, 60%, 40%);
+      background: url("marita-kavelashvili-ugnrXk1129g-unsplash.jpg");
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    /* .container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(1px);
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 1;
+} */
+
+    .clock-container {
+      height: 75%;
+      aspect-ratio: 1.5;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+    }
+
+    .clock-body {
+      height: 100%;
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      outline: 10px solid white;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .timer,
+    .session {
+      font-size: 5rem;
+      font-family: "poppins";
+      color: white;
+      font-weight: bold;
+    }
+
+    .session {
+      font-size: 3rem;
+    }
+    .buttons {
+      display: flex;
+      gap: 2rem;
+
+      div {
+        transition: 300ms;
+      }
+
+      div:hover {
+        cursor: pointer;
+        scale: 1.1;
+      }
+
+      img.hidden {
+        display: none;
+      }
+    }
+  </style>
+  <body>
+    <div class="container">
+      <div class="clock-container">
+        <div class="clock-body">
+          <div id="session" class="session">Session 1</div>
+          <div id="timer" class="timer">25:00</div>
+          <div class="buttons">
+            <div id="play-pause" class="play-pause">
+              <img id="play" src="play.svg" alt="" />
+              <img id="pause" class="hidden" src="pause.svg" alt="" />
+            </div>
+            <div id="reset" class="reset"><img src="stop.svg" alt="" /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <audio
+      src="freesound_community-alarm-clock-short-6402.mp3"
+      style="display: hidden"
+      id="alarm"
+      loop
+    ></audio>
+    <audio
+      src="dragon-studio-relaxing-rain-444802.mp3"
+      style="display: hidden"
+      id="rain"
+      loop
+    ></audio>
+  </body>
+  <script>
+    const timer = document.getElementById("timer");
+    const play_pause = document.getElementById("play-pause");
+    const reset = document.getElementById("reset");
+    const sessionDisplay = document.getElementById("session");
+    const alarm = document.getElementById("alarm");
+    const rain = document.getElementById("rain");
+
+    let session_time = 25 * 60;
+    let playing = false;
+    let timerInterval = null;
+    let sessionCount = 0;
+    let breakCount = 0;
+
+    function start() {
+      timerInterval = setInterval(() => {
+        if (playing) {
+          let minute = `${Math.floor(session_time / 60)}`;
+          let sec = `${Math.floor(session_time % 60)}`;
+
+          if (session_time / 60 < 10) {
+            minute = `0${Math.floor(session_time / 60)}`;
+          }
+          if (session_time % 60 < 10) {
+            sec = `0${Math.floor(session_time % 60)}`;
+          }
+
+          timer.innerHTML = `${minute}:${sec}`;
+
+          session_time--;
+        }
+        if (session_time < 0) {
+          console.log("here");
+          clearInterval(timerInterval);
+          sessionCount++;
+          sessionDisplay.innerHTML = `Break ${breakCount + 1}`;
+          if (!(sessionCount > 3)) {
+            rain.pause();
+            alarm.play();
+            setTimeout(() => {
+              smallBreak(300);
+              alarm.pause();
+              rain.play();
+            }, 15000);
+          } else {
+            alarm.play();
+            rain.pause();
+
+            setTimeout(() => {
+              smallBreak(1500);
+              alarm.pause();
+              rain.play();
+            }, 15000);
+          }
+        }
+      }, 1000);
+    }
+
+    function smallBreak(time) {
+      let break_time = time; // 5 minutes
+      timerInterval = setInterval(() => {
+        if (playing) {
+          let minute = `${Math.floor(break_time / 60)}`;
+          let sec = `${Math.floor(break_time % 60)}`;
+
+          if (break_time / 60 < 10) {
+            minute = `0${Math.floor(break_time / 60)}`;
+          }
+          if (break_time % 60 < 10) {
+            sec = `0${Math.floor(break_time % 60)}`;
+          }
+
+          timer.innerHTML = `${minute}:${sec}`;
+
+          break_time--;
+        }
+        if (break_time < 0) {
+          console.log("here");
+          clearInterval(timerInterval);
+          breakCount++;
+          sessionDisplay.innerHTML = `Session ${sessionCount + 1}`;
+          session_time = 2;
+          start();
+        }
+      }, 1000);
+    }
+
+    let click_count = 0;
+    play_pause.addEventListener("click", () => {
+      if (!playing) {
+        playing = true;
+        if (click_count == 0) {
+          start();
+          rain.play();
+        }
+
+        play_pause.children[0].classList.add("hidden");
+        play_pause.children[1].classList.remove("hidden");
+        click_count = 1;
+      } else {
+        playing = false;
+        play_pause.children[1].classList.add("hidden");
+        play_pause.children[0].classList.remove("hidden");
+      }
+    });
+
+    reset.addEventListener("click", () => {
+      clearInterval(timerInterval);
+      click_count = 0;
+      playing = false;
+      timer.innerHTML = "25:00";
+
+      play_pause.children[1].classList.add("hidden");
+      play_pause.children[0].classList.remove("hidden");
+    });
+  </script>
+</html>
