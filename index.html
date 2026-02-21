@@ -308,7 +308,7 @@
           clearInterval(timerInterval);
           breakCount++;
           sessionDisplay.innerHTML = `Session ${sessionCount + 1}`;
-          session_time = 2;
+          session_time = localStorage.getItem("session_time") || 1500;
           start();
         }
       }, 1000);
